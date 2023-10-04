@@ -9,6 +9,7 @@ const path = require("path");
 const xlsx = require("xlsx");
 const fileUpload = require("express-fileupload");
 const { error } = require("console");
+const { default: puppeteer } = require("puppeteer");
 
 const app = express();
 
@@ -761,6 +762,622 @@ app.get("/vacempd/:id", (req, res) => {
     res.json({ Status: "Success", Result: result[0] });
   });
 });
+
+
+app.get("/repmin/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "CALL reportpgmin(?)";
+  dbConnection.query(sql, [id], (err, result) => {
+    if (err) {
+      res.status(500).json({ Status: "Error", Error: err });
+    } else {
+       
+      (async () => {
+        const broser = await puppeteer.launch();
+        const page = await broser.newPage();
+        
+        const tableStyle = `
+          width: 100%;
+          margin: 0;
+          font-size: 0.5rem;
+          font-family: 'Roboto', sans-serif;
+        `;
+        const cellStyle = `
+          border: 1px solid #ddd;
+          padding: 4px;
+          width: 30%;
+        `;
+        const divStyle = `
+          text-align: center;
+          padding: 10px;
+        `;
+        
+        const gest = result[0][0].gest
+        console.log(gest)
+
+        const content = `
+        
+          <div style="${divStyle}">
+          <h1>Planilla mensual</h1>
+          <h2>Correspondiente a la gestion ${gest}</h2> 
+          <h2>Expresado en Boliviano</h2>
+          </div>
+        
+          <table style="${tableStyle}">
+          <tr>
+              <th style="${cellStyle}">Código Empleado</th> 
+              <th style="${cellStyle}">Nombre Completo</th>
+              <th style="${cellStyle}">País de Nacimiento</th> 
+              <th style="${cellStyle}">Fecha de Nacimiento</th> 
+              <th style="${cellStyle}">Sexo</th>
+              <th style="${cellStyle}">Cargo</th>
+              <th style="${cellStyle}">Fecha de ingreso</th>
+              <th style="${cellStyle}">Horas</th>
+              <th style="${cellStyle}">Dias</th>
+              <th style="${cellStyle}">Salario Basico</th>
+              <th style="${cellStyle}">Salario Basico Calculado</th>
+              <th style="${cellStyle}">Bono de antiguedad</th>
+              <th style="${cellStyle}">Hrs. Extras</th>
+              <th style="${cellStyle}">Hrs. Nocturnas</th>
+              <th style="${cellStyle}">Dominicales</th>
+              <th style="${cellStyle}">Fontera</th>
+              <th style="${cellStyle}">Otros Ingresos</th>
+              <th style="${cellStyle}">Total ganado</th>
+              <th style="${cellStyle}">Aporte Laboral</th>
+              <th style="${cellStyle}">Aporte may 13000</th>
+              <th style="${cellStyle}">Aporte may 25000</th>
+              <th style="${cellStyle}">Aporte may 35000</th>
+              <th style="${cellStyle}">Impuesto retenido</th>
+              <th style="${cellStyle}">Descuentos</th>
+              <th style="${cellStyle}">Total Descuentos</th>
+              <th style="${cellStyle}">Liquido Pagable</th>
+                   
+
+          </tr>
+          ${result[0]
+            .map(
+              (item) => `
+          <tr>
+                <td style="${cellStyle}">${item.cod_emp}</td> 
+                <td style="${cellStyle}">${item.nomc}</td>
+                <td style="${cellStyle}">${item.birthcountry}</td> 
+                <td style="${cellStyle}">${item.birth}</td>
+                <td style="${cellStyle}">${item.sex}</td>
+                <td style="${cellStyle}">${item.position}</td>
+                <td style="${cellStyle}">${item.startd}</td>
+                <td style="${cellStyle}">${item.hrs}</td>
+                <td style="${cellStyle}">${item.TDT}</td>
+                <td style="${cellStyle}">${item.SBB}</td>
+                <td style="${cellStyle}">${item.SBC}</td>
+                <td style="${cellStyle}">${item.ANT}</td>
+                <td style="${cellStyle}">${item.MHE}</td>
+                <td style="${cellStyle}">${item.MHN}</td>
+                <td style="${cellStyle}">${item.DOM}</td>
+                <td style="${cellStyle}">${item.FRO}</td>
+                <td style="${cellStyle}">${item.OTA}</td>
+                <td style="${cellStyle}">${item.TGA}</td>
+                <td style="${cellStyle}">${item.LAB}</td>
+                <td style="${cellStyle}">${item.S13}</td>
+                <td style="${cellStyle}">${item.S25}</td>
+                <td style="${cellStyle}">${item.S35}</td>
+                <td style="${cellStyle}">${item.IRE}</td>
+                <td style="${cellStyle}">${item.DE1}</td>
+                <td style="${cellStyle}">${item.TDE}</td>
+                <td style="${cellStyle}">${item.LIQ}</td>
+                </tr>
+              `
+            )
+            .join("")}
+              
+          </table>
+        `;
+        await page.setContent(content);
+        const pdfBuffer = await page.pdf({ format: "legal", landscape: true  });
+        await broser.close();
+
+        // Enviar el PDF como respuesta
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename=reporte.pdf`
+        );
+        res.status(200).send(pdfBuffer);
+      })();
+    }
+  });
+});
+
+
+app.get("/replab/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "CALL reportpmlab(?)";
+  dbConnection.query(sql, [id], (err, result) => {
+    if (err) {
+      res.status(500).json({ Status: "Error", Error: err });
+    } else {
+       
+      (async () => {
+        const broser = await puppeteer.launch();
+        const page = await broser.newPage();
+        
+        const tableStyle = `
+          width: 100%;
+          margin: 0;
+          font-size: 0.5rem;
+          font-family: 'Roboto', sans-serif;
+        `;
+        const cellStyle = `
+          border: 1px solid #ddd;
+          padding: 4px;
+          width: 30%;
+        `;
+        const divStyle = `
+          text-align: center;
+          padding: 10px;
+        `;
+        
+        const gest = result[0][0].gest
+        console.log(gest)
+
+        const content = `
+        
+          <div style="${divStyle}">
+          <h1>Planilla Aportes Laborales</h1>
+          <h2>Correspondiente a la gestion ${gest}</h2> 
+          <h2>Expresado en Boliviano</h2>
+          </div>
+        
+          <table style="${tableStyle}">
+          <tr>
+              <th style="${cellStyle}">Código Empleado</th> 
+              <th style="${cellStyle}">Nombre Completo</th>
+              <th style="${cellStyle}">País de Nacimiento</th> 
+              <th style="${cellStyle}">Fecha de Nacimiento</th> 
+              <th style="${cellStyle}">Sexo</th>
+              <th style="${cellStyle}">Cargo</th>
+              <th style="${cellStyle}">Fecha de ingreso</th>
+              <th style="${cellStyle}">Horas</th>
+              <th style="${cellStyle}">Dias</th>
+              <th style="${cellStyle}">Salario Basico</th>
+              <th style="${cellStyle}">Salario Basico Calculado</th>
+              <th style="${cellStyle}">Total ganado</th>
+              <th style="${cellStyle}">CNS</th>
+              <th style="${cellStyle}">Aporte 1.71</th>
+              <th style="${cellStyle}">Aporte 0.5</th>
+              <th style="${cellStyle}">Aporte 0.5</th>
+              <th style="${cellStyle}">Aporte may. 13000</th>
+              <th style="${cellStyle}">Aporte may. 25000</th>
+              <th style="${cellStyle}">Aporte may. 35000</th>
+              
+                   
+
+          </tr>
+          ${result[0]
+            .map(
+              (item) => `
+          <tr>
+                <td style="${cellStyle}">${item.cod_emp}</td> 
+                <td style="${cellStyle}">${item.nomc}</td>
+                <td style="${cellStyle}">${item.birthcountry}</td> 
+                <td style="${cellStyle}">${item.birth}</td>
+                <td style="${cellStyle}">${item.sex}</td>
+                <td style="${cellStyle}">${item.position}</td>
+                <td style="${cellStyle}">${item.startd}</td>
+                <td style="${cellStyle}">${item.hrs}</td>
+                <td style="${cellStyle}">${item.TDT}</td>
+                <td style="${cellStyle}">${item.SBB}</td>
+                <td style="${cellStyle}">${item.SBC}</td>
+                <td style="${cellStyle}">${item.TGA}</td>
+                <td style="${cellStyle}">${item.CNS}</td>
+                <td style="${cellStyle}">${item.APO1}</td>
+                <td style="${cellStyle}">${item.APO2}</td>
+                <td style="${cellStyle}">${item.APO3}</td>
+                <td style="${cellStyle}">${item.PA13}</td>
+                <td style="${cellStyle}">${item.PA25}</td>
+                <td style="${cellStyle}">${item.PA35}</td>
+
+                </tr>
+              `
+            )
+            .join("")}
+              
+          </table>
+        `;
+        await page.setContent(content);
+        const pdfBuffer = await page.pdf({ format: "legal", landscape: true  });
+        await broser.close();
+
+        // Enviar el PDF como respuesta
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename=reporte.pdf`
+        );
+        res.status(200).send(pdfBuffer);
+      })();
+    }
+  });
+});
+
+
+app.get("/reppat/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "CALL reportpmpat(?)";
+  dbConnection.query(sql, [id], (err, result) => {
+    if (err) {
+      res.status(500).json({ Status: "Error", Error: err });
+    } else {
+       
+      (async () => {
+        const broser = await puppeteer.launch();
+        const page = await broser.newPage();
+        
+        const tableStyle = `
+          width: 100%;
+          margin: 0;
+          font-size: 0.5rem;
+          font-family: 'Roboto', sans-serif;
+        `;
+        const cellStyle = `
+          border: 1px solid #ddd;
+          padding: 4px;
+          width: 30%;
+        `;
+        const divStyle = `
+          text-align: center;
+          padding: 10px;
+        `;
+        
+        const gest = result[0][0].gest
+        console.log(gest)
+
+        const content = `
+        
+          <div style="${divStyle}">
+          <h1>Planilla Aportes Patronales</h1>
+          <h2>Correspondiente a la gestion ${gest}</h2> 
+          <h2>Expresado en Boliviano</h2>
+          </div>
+        
+          <table style="${tableStyle}">
+          <tr>
+              <th style="${cellStyle}">Código Empleado</th> 
+              <th style="${cellStyle}">Nombre Completo</th>
+              <th style="${cellStyle}">País de Nacimiento</th> 
+              <th style="${cellStyle}">Fecha de Nacimiento</th> 
+              <th style="${cellStyle}">Sexo</th>
+              <th style="${cellStyle}">Cargo</th>
+              <th style="${cellStyle}">Fecha de ingreso</th>
+              <th style="${cellStyle}">Horas</th>
+              <th style="${cellStyle}">Dias</th>
+              <th style="${cellStyle}">Salario Basico</th>
+              <th style="${cellStyle}">Salario Basico Calculado</th>
+              <th style="${cellStyle}">Total ganado</th>
+              <th style="${cellStyle}">Aportes 10%</th>
+              <th style="${cellStyle}">Aporte 1.71%</th>
+              <th style="${cellStyle}">Aporte 0.5%</th>
+              <th style="${cellStyle}">Aporte 2%</th>
+              <th style="${cellStyle}">Aporte 3%</th>
+              
+              
+                   
+
+          </tr>
+          ${result[0]
+            .map(
+              (item) => `
+          <tr>
+                <td style="${cellStyle}">${item.cod_emp}</td> 
+                <td style="${cellStyle}">${item.nomc}</td>
+                <td style="${cellStyle}">${item.birthcountry}</td> 
+                <td style="${cellStyle}">${item.birth}</td>
+                <td style="${cellStyle}">${item.sex}</td>
+                <td style="${cellStyle}">${item.position}</td>
+                <td style="${cellStyle}">${item.startd}</td>
+                <td style="${cellStyle}">${item.hrs}</td>
+                <td style="${cellStyle}">${item.TDT}</td>
+                <td style="${cellStyle}">${item.SBB}</td>
+                <td style="${cellStyle}">${item.SBC}</td>
+                <td style="${cellStyle}">${item.TGA}</td>
+                <td style="${cellStyle}">${item.CNS}</td>
+                <td style="${cellStyle}">${item.APO1}</td>
+                <td style="${cellStyle}">${item.APO2}</td>
+                <td style="${cellStyle}">${item.APO3}</td>
+                <td style="${cellStyle}">${item.APO4}</td>
+                
+
+                </tr>
+              `
+            )
+            .join("")}
+              
+          </table>
+        `;
+        await page.setContent(content);
+        const pdfBuffer = await page.pdf({ format: "legal", landscape: true  });
+        await broser.close();
+
+        // Enviar el PDF como respuesta
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename=reporte.pdf`
+        );
+        res.status(200).send(pdfBuffer);
+      })();
+    }
+  });
+});
+
+
+app.get("/repprov/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "CALL reportpmpro(?)";
+  dbConnection.query(sql, [id], (err, result) => {
+    if (err) {
+      res.status(500).json({ Status: "Error", Error: err });
+    } else {
+       
+      (async () => {
+        const broser = await puppeteer.launch();
+        const page = await broser.newPage();
+        
+        const tableStyle = `
+          width: 100%;
+          margin: 0;
+          font-size: 0.5rem;
+          font-family: 'Roboto', sans-serif;
+        `;
+        const cellStyle = `
+          border: 1px solid #ddd;
+          padding: 4px;
+          width: 30%;
+        `;
+        const divStyle = `
+          text-align: center;
+          padding: 10px;
+        `;
+        
+        const gest = result[0][0].gest
+        console.log(gest)
+
+        const content = `
+        
+          <div style="${divStyle}">
+          <h1>Planilla Provisiones</h1>
+          <h2>Correspondiente a la gestion ${gest}</h2> 
+          <h2>Expresado en Boliviano</h2>
+          </div>
+        
+          <table style="${tableStyle}">
+          <tr>
+              <th style="${cellStyle}">Código Empleado</th> 
+              <th style="${cellStyle}">Nombre Completo</th>
+              <th style="${cellStyle}">País de Nacimiento</th> 
+              <th style="${cellStyle}">Fecha de Nacimiento</th> 
+              <th style="${cellStyle}">Sexo</th>
+              <th style="${cellStyle}">Cargo</th>
+              <th style="${cellStyle}">Fecha de ingreso</th>
+              <th style="${cellStyle}">Horas</th>
+              <th style="${cellStyle}">Dias</th>
+              <th style="${cellStyle}">Salario Basico</th>
+              <th style="${cellStyle}">Salario Basico Calculado</th>
+              <th style="${cellStyle}">Total ganado</th>
+              <th style="${cellStyle}">Provision 8.33%</th>
+                    
+                   
+
+          </tr>
+          ${result[0]
+            .map(
+              (item) => `
+          <tr>
+                <td style="${cellStyle}">${item.cod_emp}</td> 
+                <td style="${cellStyle}">${item.nomc}</td>
+                <td style="${cellStyle}">${item.birthcountry}</td> 
+                <td style="${cellStyle}">${item.birth}</td>
+                <td style="${cellStyle}">${item.sex}</td>
+                <td style="${cellStyle}">${item.position}</td>
+                <td style="${cellStyle}">${item.startd}</td>
+                <td style="${cellStyle}">${item.hrs}</td>
+                <td style="${cellStyle}">${item.TDT}</td>
+                <td style="${cellStyle}">${item.SBB}</td>
+                <td style="${cellStyle}">${item.SBC}</td>
+                <td style="${cellStyle}">${item.TGA}</td>
+                <td style="${cellStyle}">${item.PRO}</td>
+                
+                </tr>
+              `
+            )
+            .join("")}
+              
+          </table>
+        `;
+        await page.setContent(content);
+        const pdfBuffer = await page.pdf({ format: "legal", landscape: true  });
+        await broser.close();
+
+        // Enviar el PDF como respuesta
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename=reporte.pdf`
+        );
+        res.status(200).send(pdfBuffer);
+      })();
+    }
+  });
+});
+
+
+app.get("/reptrib/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "CALL reportpmtri(?)";
+  dbConnection.query(sql, [id], (err, result) => {
+    if (err) {
+      res.status(500).json({ Status: "Error", Error: err });
+    } else {
+       
+      (async () => {
+        const broser = await puppeteer.launch();
+        const page = await broser.newPage();
+        
+        const tableStyle = `
+          width: 100%;
+          margin: 0;
+          font-size: 0.5rem;
+          font-family: 'Roboto', sans-serif;
+        `;
+        const cellStyle = `
+          border: 1px solid #ddd;
+          padding: 4px;
+          width: 30%;
+        `;
+        const divStyle = `
+          text-align: center;
+          padding: 10px;
+        `;
+        
+        const gest = result[0][0].gest
+        console.log(gest)
+
+        const content = `
+        
+          <div style="${divStyle}">
+          <h1>Planilla Tributaria</h1>
+          <h2>Correspondiente a la gestion ${gest}</h2> 
+          <h2>Expresado en Boliviano</h2>
+          </div>
+        
+          <table style="${tableStyle}">
+          <tr>
+              <th style="${cellStyle}">Año</th> 
+              <th style="${cellStyle}">Mes</th>
+              <th style="${cellStyle}">RCIVA</th> 
+              <th style="${cellStyle}">Nombres</th> 
+              <th style="${cellStyle}">Apellido Paterno</th>
+              <th style="${cellStyle}">Apellido Materno</th>
+              <th style="${cellStyle}">CI</th>
+              <th style="${cellStyle}">EXT</th>
+              <th style="${cellStyle}">Novedad</th>
+              <th style="${cellStyle}">TNE</th>
+              <th style="${cellStyle}">T2S</th>
+              <th style="${cellStyle}">ISI</th>
+              <th style="${cellStyle}">RCI</th>
+              <th style="${cellStyle}">R13</th>
+              <th style="${cellStyle}">INR</th>
+              <th style="${cellStyle}">F11</th>
+              <th style="${cellStyle}">SFF</th>
+              <th style="${cellStyle}">SFD</th>
+              <th style="${cellStyle}">SPA</th>
+              <th style="${cellStyle}">MVD</th>
+              <th style="${cellStyle}">SMA</th>
+              <th style="${cellStyle}">SUT</th>
+              <th style="${cellStyle}">IRE</th>
+              <th style="${cellStyle}">SMS</th>
+                    
+                   
+
+          </tr>
+          ${result[0]
+            .map(
+              (item) => `
+          <tr>
+                <td style="${cellStyle}">${item.anio}</td> 
+                <td style="${cellStyle}">${item.mes}</td>
+                <td style="${cellStyle}">${item.RCIVA}</td> 
+                <td style="${cellStyle}">${item.nom}</td>
+                <td style="${cellStyle}">${item.lastname}</td>
+                <td style="${cellStyle}">${item.lastname2}</td>
+                <td style="${cellStyle}">${item.CI}</td>
+                <td style="${cellStyle}">${item.CID}</td>
+                <td style="${cellStyle}">${item.NOV}</td>
+                <td style="${cellStyle}">${item.TNE}</td>
+                <td style="${cellStyle}">${item.T2S}</td>
+                <td style="${cellStyle}">${item.ISI}</td>
+                <td style="${cellStyle}">${item.RCI}</td>
+                <td style="${cellStyle}">${item.R13}</td>
+                <td style="${cellStyle}">${item.INR}</td>
+                <td style="${cellStyle}">${item.F11}</td>
+                <td style="${cellStyle}">${item.SFF}</td>
+                <td style="${cellStyle}">${item.SFD}</td>
+                <td style="${cellStyle}">${item.SPA}</td>
+                <td style="${cellStyle}">${item.MVD}</td>
+                <td style="${cellStyle}">${item.SMA}</td>
+                <td style="${cellStyle}">${item.SUT}</td>
+                <td style="${cellStyle}">${item.IRE}</td>
+                <td style="${cellStyle}">${item.SMS}</td>
+                
+                </tr>
+              `
+            )
+            .join("")}
+              
+          </table>
+        `;
+        await page.setContent(content);
+        const pdfBuffer = await page.pdf({ format: "legal", landscape: true  });
+        await broser.close();
+
+        // Enviar el PDF como respuesta
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename=reporte.pdf`
+        );
+        res.status(200).send(pdfBuffer);
+      })();
+    }
+  });
+});
+
+
+
+
+
+
+
+
+
+
+app.get("/replab/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "CALL reportpmlab(?)";
+  dbConnection.query(sql, [id], (err, result) => {
+    res.json({ Status: "Success", Result: result[0] });
+  });
+});
+
+app.get("/reppat/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "CALL reportpmpat(?)";
+  dbConnection.query(sql, [id], (err, result) => {
+    res.json({ Status: "Success", Result: result[0] });
+  });
+});
+
+app.get("/reppro/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "CALL reportpmpro(?)";
+  dbConnection.query(sql, [id], (err, result) => {
+    res.json({ Status: "Success", Result: result[0] });
+  });
+});
+
+app.get("/reptri/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "CALL reportpmtri(?)";
+  dbConnection.query(sql, [id], (err, result) => {
+    res.json({ Status: "Success", Result: result[0] });
+  });
+});
+
+app.get("/detgest", (req, res)=>{
+  const sql = "SELECT gest FROM RRHH.tproce"
+  dbConnection.query(sql,(err, result) =>{
+    res.json({Status: "Success", Result: result})
+  })
+})
 
 const PORT = process.env.PORT || 4000;
 
