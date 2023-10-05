@@ -486,7 +486,7 @@ app.post("/employeelogin", (req, res) => {
   const sql = "SELECT * FROM employee WHERE email = ?";
 
   dbConnection.query(sql, [req.body.email], (err, result) => {
-    console.log(result[0].empid);
+   
     if (err)
       return res.json({ Status: "Error", Error: "Error in runnig query" });
     if (result.length > 0) {
@@ -497,7 +497,7 @@ app.post("/employeelogin", (req, res) => {
           if (err) return res.json({ Error: "password error" });
           if (response) {
             const token = jwt.sign(
-              { role: "02", empid: result[0].empid },
+              { role: "02"},
               "jwt-secret-key",
               {
                 expiresIn: "2h",
@@ -647,6 +647,14 @@ app.get("/rpliq", (req, res) => {
   });
 });
 
+app.get("/rptgan", (req, res) => {
+  dbConnection.query("CALL reportTGA()", (err, result) => {
+    /*console.log(result);*/
+    res.json({ Status: "Success", Result: result[0] });
+  });
+});
+
+
 app.get("/rpbirth/:id", (req, res) => {
   const id = req.params.id;
   dbConnection.query("CALL birth(?)", [id], (err, result) => {
@@ -763,7 +771,6 @@ app.get("/vacempd/:id", (req, res) => {
   });
 });
 
-
 app.get("/repmin/:id", (req, res) => {
   const id = req.params.id;
   const sql = "CALL reportpgmin(?)";
@@ -771,11 +778,10 @@ app.get("/repmin/:id", (req, res) => {
     if (err) {
       res.status(500).json({ Status: "Error", Error: err });
     } else {
-       
       (async () => {
         const broser = await puppeteer.launch();
         const page = await broser.newPage();
-        
+
         const tableStyle = `
           width: 100%;
           margin: 0;
@@ -791,9 +797,9 @@ app.get("/repmin/:id", (req, res) => {
           text-align: center;
           padding: 10px;
         `;
-        
-        const gest = result[0][0].gest
-        console.log(gest)
+
+        const gest = result[0][0].gest;
+        console.log(gest);
 
         const content = `
         
@@ -872,7 +878,7 @@ app.get("/repmin/:id", (req, res) => {
           </table>
         `;
         await page.setContent(content);
-        const pdfBuffer = await page.pdf({ format: "legal", landscape: true  });
+        const pdfBuffer = await page.pdf({ format: "legal", landscape: true });
         await broser.close();
 
         // Enviar el PDF como respuesta
@@ -887,6 +893,253 @@ app.get("/repmin/:id", (req, res) => {
   });
 });
 
+app.get("/repbolt/:gest/:id", (req, res) => {
+  const { gest, id } = req.params;
+  const sql = "CALL reportpgminb(?,?)";
+  dbConnection.query(sql, [gest, id], (err, result) => {
+    if (err) {
+      res.status(500).json({ Status: "Error", Error: err });
+    } else {
+      (async () => {
+        const broser = await puppeteer.launch();
+        const page = await broser.newPage();
+
+        
+        const cellStyle = `
+          border: 1px solid #ddd;
+          padding: 4px;
+          
+        `;
+        const divStyle = `
+          text-align: center;
+          padding: 10px;
+        `;
+        const divStylen = `
+          display:grid;
+          grid-template-columns: 1fr 1fr;          
+        
+        `;
+        const divStyletit = `
+          display:grid;
+          grid-template-columns: 1fr 1fr;
+          
+        `;
+
+        const border = `
+          margin-left: 30px;
+          margin-right: 30px;
+        `
+
+        const gest = result[0][0].gest;
+        console.log( gest,id );
+
+        const content = `
+        
+          <div style="${divStyle}">
+          <h1>Boleta de pago</h1>
+          <h2>Correspondiente a la gestion ${gest}</h2> 
+          <h2>Expresado en Boliviano</h2>
+          </div>
+          ${result[0]
+            .map(
+              (item) => `
+          <div style="${divStylen, border}">
+            <div>Codigo: ${item.cod_emp}</div>
+          </div>
+          <div style="${divStylen, border}">
+            <div>Nombre completo: ${item.nomc}</div>
+          </div>
+          <div style="${divStylen, border}">
+            <div>Cargo: ${item.position}</div> 
+          </div> 
+          <div style="${divStylen, border}">
+            <div>Fecha de ingreso: ${item.startd}</div> 
+          </div> 
+          <hr style="${border}">
+          <div style="${divStyletit}">
+            <div>
+              <h3 style="${border}">INGRESOS</h3>
+            </div> 
+            <div>
+              <h3 style="${border}">DESCUENTOS</h3>
+            </div>
+          </div>
+          <hr style="${border}">
+
+          <div style="${divStyletit}">
+            <div>
+              <div style="${divStylen}">
+                <div style="${border}">Salario Basico:</div>
+                <div>${item.SBB}</div> 
+              </div>
+            </div> 
+            <div>
+              <div style="${divStylen}">
+                <div>Aportes laborales:</div> 
+                <div>${item.LAB}</div>
+              </div> 
+            </div>
+          </div>
+
+          <div style="${divStyletit}">
+            <div>
+              <div style="${divStylen}">
+                <div style="${border}">Dias Trabajados:</div>
+                <div >${item.TDT}</div> 
+              </div>
+            </div> 
+            <div>
+              <div style="${divStylen}">
+                <div>Aportes may. 13000:</div> 
+                <div>${item.S13}</div>
+              </div> 
+            </div>
+          </div>
+          
+          <div style="${divStyletit}">
+            <div>
+              <div style="${divStylen}">
+                <div style="${border}">Salarios calculados:</div>
+                <div>${item.SBC}</div> 
+              </div>
+            </div> 
+            <div>
+              <div style="${divStylen}">
+                <div>Aportes may. 25000:</div> 
+                <div>${item.S25}</div>
+              </div> 
+            </div>
+          </div>
+          
+          <div style="${divStyletit}">
+            <div>
+              <div style="${divStylen}">
+                <div style="${border}">Bono de antiguedad:</div>
+                <div>${item.ANT}</div> 
+              </div>
+            </div> 
+            <div>
+              <div style="${divStylen}">
+                <div>Aportes may. 35000:</div> 
+                <div>${item.S35}</div>
+              </div> 
+            </div>
+          </div>
+
+          <div style="${divStyletit}">
+          <div>
+            <div style="${divStylen}">
+              <div style="${border}">Horas Extras:</div>
+              <div>${item.MHE}</div> 
+            </div>
+          </div> 
+          <div>
+            <div style="${divStylen}">
+              <div></div> 
+              <div></div>
+            </div> 
+          </div>
+        </div>
+
+        <div style="${divStyletit}">
+          <div>
+            <div style="${divStylen}">
+              <div style="${border}">Horas Nocturnas:</div>
+              <div>${item.MHN}</div> 
+            </div>
+          </div> 
+          <div>
+            <div style="${divStylen}">
+              <div>Impuesto retenido</div> 
+              <div>${item.IRE}</div>
+            </div> 
+          </div>
+        </div>
+          
+        <div style="${divStyletit}">
+          <div>
+            <div style="${divStylen}">
+              <div style="${border}">Dominicales:</div>
+              <div>${item.DOM}</div> 
+            </div>
+          </div> 
+          <div>
+            <div style="${divStylen}">
+              <div>Otros descuentos</div> 
+              <div>${item.DE1}</div>
+            </div> 
+          </div>
+        </div>
+          
+        <div style="${divStyletit}">
+          <div>
+            <div style="${divStylen}">
+              <div style="${border}">Bono Frontera:</div>
+              <div>${item.FRO}</div> 
+            </div>
+          </div> 
+          <div>
+            <div style="${divStylen}">
+              <div></div> 
+              <div></div>
+            </div> 
+          </div>
+        </div>
+
+        <div style="${divStyletit}">
+        <div>
+          <div style="${divStylen}">
+            <div style="${border}">Otros ingresos:</div>
+            <div>${item.OTA}</div> 
+          </div>
+        </div> 
+        <div>
+          <div style="${divStylen}">
+            <div>Total descuentos:</div> 
+            <div>${item.TDE}</div>
+          </div> 
+        </div>
+      </div>
+      <hr style="${border}">
+      <div style="${divStyletit}">
+        <div>
+            <h3 style="${border}">TOTALES</h3>
+            <div style="${divStylen}">
+              <div style="${border}">TOTAL GANADO:</div> 
+              <div>${item.TGA}</div>  
+            </div>
+        </div>
+        <div>
+            <h3>-</h3>
+            <div style="${divStylen}">
+              <div>LIQUIDO PAGABLE:</div>
+              <div>${item.LIQ}</div>
+            </div>
+        </div> 
+      </div>                
+      <hr style="${border}">
+          `
+            )
+            .join("")}
+        `;
+        await page.setContent(content);
+        const pdfBuffer = await page.pdf({
+          format: "letter",
+          landscape: false,
+        });
+        await broser.close();
+
+        // Enviar el PDF como respuesta
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename=reporte.pdf`
+        );
+        res.status(200).send(pdfBuffer);
+      })();
+    }
+  });
+});
 
 app.get("/replab/:id", (req, res) => {
   const id = req.params.id;
@@ -895,11 +1148,10 @@ app.get("/replab/:id", (req, res) => {
     if (err) {
       res.status(500).json({ Status: "Error", Error: err });
     } else {
-       
       (async () => {
         const broser = await puppeteer.launch();
         const page = await broser.newPage();
-        
+
         const tableStyle = `
           width: 100%;
           margin: 0;
@@ -915,9 +1167,9 @@ app.get("/replab/:id", (req, res) => {
           text-align: center;
           padding: 10px;
         `;
-        
-        const gest = result[0][0].gest
-        console.log(gest)
+
+        const gest = result[0][0].gest;
+        console.log(gest);
 
         const content = `
         
@@ -984,7 +1236,7 @@ app.get("/replab/:id", (req, res) => {
           </table>
         `;
         await page.setContent(content);
-        const pdfBuffer = await page.pdf({ format: "legal", landscape: true  });
+        const pdfBuffer = await page.pdf({ format: "legal", landscape: true });
         await broser.close();
 
         // Enviar el PDF como respuesta
@@ -999,7 +1251,6 @@ app.get("/replab/:id", (req, res) => {
   });
 });
 
-
 app.get("/reppat/:id", (req, res) => {
   const id = req.params.id;
   const sql = "CALL reportpmpat(?)";
@@ -1007,11 +1258,10 @@ app.get("/reppat/:id", (req, res) => {
     if (err) {
       res.status(500).json({ Status: "Error", Error: err });
     } else {
-       
       (async () => {
         const broser = await puppeteer.launch();
         const page = await broser.newPage();
-        
+
         const tableStyle = `
           width: 100%;
           margin: 0;
@@ -1027,9 +1277,9 @@ app.get("/reppat/:id", (req, res) => {
           text-align: center;
           padding: 10px;
         `;
-        
-        const gest = result[0][0].gest
-        console.log(gest)
+
+        const gest = result[0][0].gest;
+        console.log(gest);
 
         const content = `
         
@@ -1094,7 +1344,7 @@ app.get("/reppat/:id", (req, res) => {
           </table>
         `;
         await page.setContent(content);
-        const pdfBuffer = await page.pdf({ format: "legal", landscape: true  });
+        const pdfBuffer = await page.pdf({ format: "legal", landscape: true });
         await broser.close();
 
         // Enviar el PDF como respuesta
@@ -1109,7 +1359,6 @@ app.get("/reppat/:id", (req, res) => {
   });
 });
 
-
 app.get("/repprov/:id", (req, res) => {
   const id = req.params.id;
   const sql = "CALL reportpmpro(?)";
@@ -1117,11 +1366,10 @@ app.get("/repprov/:id", (req, res) => {
     if (err) {
       res.status(500).json({ Status: "Error", Error: err });
     } else {
-       
       (async () => {
         const broser = await puppeteer.launch();
         const page = await broser.newPage();
-        
+
         const tableStyle = `
           width: 100%;
           margin: 0;
@@ -1137,9 +1385,9 @@ app.get("/repprov/:id", (req, res) => {
           text-align: center;
           padding: 10px;
         `;
-        
-        const gest = result[0][0].gest
-        console.log(gest)
+
+        const gest = result[0][0].gest;
+        console.log(gest);
 
         const content = `
         
@@ -1194,7 +1442,7 @@ app.get("/repprov/:id", (req, res) => {
           </table>
         `;
         await page.setContent(content);
-        const pdfBuffer = await page.pdf({ format: "legal", landscape: true  });
+        const pdfBuffer = await page.pdf({ format: "legal", landscape: true });
         await broser.close();
 
         // Enviar el PDF como respuesta
@@ -1209,7 +1457,6 @@ app.get("/repprov/:id", (req, res) => {
   });
 });
 
-
 app.get("/reptrib/:id", (req, res) => {
   const id = req.params.id;
   const sql = "CALL reportpmtri(?)";
@@ -1217,11 +1464,10 @@ app.get("/reptrib/:id", (req, res) => {
     if (err) {
       res.status(500).json({ Status: "Error", Error: err });
     } else {
-       
       (async () => {
         const broser = await puppeteer.launch();
         const page = await broser.newPage();
-        
+
         const tableStyle = `
           width: 100%;
           margin: 0;
@@ -1237,9 +1483,9 @@ app.get("/reptrib/:id", (req, res) => {
           text-align: center;
           padding: 10px;
         `;
-        
-        const gest = result[0][0].gest
-        console.log(gest)
+
+        const gest = result[0][0].gest;
+        console.log(gest);
 
         const content = `
         
@@ -1316,7 +1562,7 @@ app.get("/reptrib/:id", (req, res) => {
           </table>
         `;
         await page.setContent(content);
-        const pdfBuffer = await page.pdf({ format: "legal", landscape: true  });
+        const pdfBuffer = await page.pdf({ format: "legal", landscape: true });
         await broser.close();
 
         // Enviar el PDF como respuesta
@@ -1330,15 +1576,6 @@ app.get("/reptrib/:id", (req, res) => {
     }
   });
 });
-
-
-
-
-
-
-
-
-
 
 app.get("/replab/:id", (req, res) => {
   const id = req.params.id;
@@ -1372,12 +1609,12 @@ app.get("/reptri/:id", (req, res) => {
   });
 });
 
-app.get("/detgest", (req, res)=>{
-  const sql = "SELECT gest FROM RRHH.tproce"
-  dbConnection.query(sql,(err, result) =>{
-    res.json({Status: "Success", Result: result})
-  })
-})
+app.get("/detgest", (req, res) => {
+  const sql = "SELECT gest FROM RRHH.tproce";
+  dbConnection.query(sql, (err, result) => {
+    res.json({ Status: "Success", Result: result });
+  });
+});
 
 const PORT = process.env.PORT || 4000;
 
