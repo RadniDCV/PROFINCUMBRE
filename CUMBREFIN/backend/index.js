@@ -25,6 +25,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.static("public"));
 
+/*habilitacion de toquen */
 const verifyUser = (req, res, next) => {
   const token = req.cookies.token;
   if (!token) {
@@ -39,6 +40,7 @@ const verifyUser = (req, res, next) => {
   }
 };
 
+/*Detalle de datos manuales*/
 app.get("/detmanual/:gest", (req, res) => {
   const gest = req.params.gest;
   const sql = "SELECT * FROM dmanual WHERE gest = ?";
@@ -48,6 +50,7 @@ app.get("/detmanual/:gest", (req, res) => {
   });
 });
 
+/*Detalle de dashboard*/
 app.get("/dashboard", verifyUser, (req, res) => {
   return res.json({ Status: "Success", role: req.role, id: req.id });
 });
@@ -66,6 +69,7 @@ const multerStorage = multer.diskStorage({
 
 const multerUpload = multer({ storage: multerStorage });
 
+/*Detalle de empleados */
 app.get("/getemp", (req, res) => {
   const sql =
     "SELECT `empid`, CONCAT(`lastname`,' ',`lastname2`,' ',`firstname`,' ',`middlename`) as fname  FROM employee";
@@ -84,6 +88,7 @@ app.get("/payempd", (req, res) => {
   });
 });
 
+/*Detalle de empleados con gestion */
 app.get("/get/:id", (req, res) => {
   const id = req.params.id;
   const sql =
@@ -94,6 +99,7 @@ app.get("/get/:id", (req, res) => {
   });
 });
 
+/*Actualizacion de empleados */
 app.put("/update/:id", (req, res) => {
   const id = req.params.id;
   const {
@@ -152,6 +158,7 @@ app.put("/update/:id", (req, res) => {
   });
 });
 
+/*Usuarios de administracion */
 app.get("/userdets", (req, res) => {
   const sql = "SELECT username FROM user";
   dbConnection.query(sql, (err, result) => {
@@ -160,6 +167,7 @@ app.get("/userdets", (req, res) => {
   });
 });
 
+/*Cantidad de empleados */
 app.get("/adminCount", (req, res) => {
   const sql = "SELECT count(id) as admin FROM user";
   dbConnection.query(sql, (err, result) => {
@@ -168,6 +176,7 @@ app.get("/adminCount", (req, res) => {
   });
 });
 
+/*Total de salarios */
 app.get("/salary", (req, res) => {
   const sql =
     "SELECT cast(sum(salary) as decimal(10,2)) as sumOfSalary from employee";
@@ -177,6 +186,7 @@ app.get("/salary", (req, res) => {
   });
 });
 
+/*Cantidad de empleados */
 app.get("/employeeCount", (req, res) => {
   const sql = "SELECT count(empid) as employee from employee";
   dbConnection.query(sql, (err, result) => {
@@ -185,6 +195,7 @@ app.get("/employeeCount", (req, res) => {
   });
 });
 
+/*Cantidad de mujeres */
 app.get("/employeefem", (req, res) => {
   const sql = "SELECT count(sex) from employee where sex='02'";
   dbConnection.query(sql, (err, result) => {
@@ -193,6 +204,7 @@ app.get("/employeefem", (req, res) => {
   });
 });
 
+/*Cantidad de hombres*/
 app.get("/employeemas", (req, res) => {
   const sql = "SELECT count(sex) from employee where sex='01'";
   dbConnection.query(sql, (err, result) => {
@@ -201,6 +213,7 @@ app.get("/employeemas", (req, res) => {
   });
 });
 
+/*Empleados detallado */
 app.get("/getemployee", (req, res) => {
   const sql =
     "SELECT *, DAY(startdate)AS DIA, MONTH(startdate) AS MES, YEAR(startdate) as ANIO, CASE WHEN ext='01' then 'LP' WHEN ext='02' then 'SC' WHEN ext='03' then 'CB' WHEN ext='04' then 'CH' WHEN ext='05' then 'PO' WHEN ext='06' then 'OR' WHEN ext='07' then 'TJ' WHEN ext='08' then 'BE' WHEN ext='09' then 'PA' else 'Extranjero' end extci, case when sex='01'then 'Hombre' else 'Mujer' end sexo, case when martstatus='01' then 'Casado(a)' when martstatus='02' then 'Soltero(a)' when martstatus='03' then 'Viudo(a)' when martstatus='04' then 'Vidorsiado(a)' else '' end marstatuse, case when bank='01' then 'Mercantil Santa Cruz' when bank='02' then 'UNION' when bank='03' then 'BISA' when bank='04' then 'BCP' when bank='05' then 'Prodem' else '' end banks FROM employee order by startdate";
@@ -212,7 +225,7 @@ app.get("/getemployee", (req, res) => {
 
 //Configuracion de usuarios
 
-//Lista de usuarios
+/*Lista d eusuario*/
 app.get("/usera", (req, res) => {
   const sql = "SELECT * FROM user";
   dbConnection.query(sql, (err, result) => {
@@ -220,7 +233,8 @@ app.get("/usera", (req, res) => {
     return res.json({ Status: "Success", Result: result });
   });
 });
-//Crear usuarios
+
+/*Crear usuarios*/
 app.post("/creauser", (req, res) => {
   const sql =
     "INSERT INTO user (`username`,`email`,`password`,`role`) VALUES (?)";
@@ -229,12 +243,12 @@ app.post("/creauser", (req, res) => {
     const values = [req.body.username, req.body.email, hash, req.body.role];
     dbConnection.query(sql, [values], (err, result) => {
       if (err) return res.json({ Error: "Inside query" });
-      /*console.log(values);*/
       return res.json({ Status: "Success" });
     });
   });
 });
-//Eliminar usuarios
+
+/*Eliminar usuarios*/
 app.delete("/deluser/:id", (req, res) => {
   const id = req.params.id;
   const sql = "DELETE FROM user WHERE id = ?";
@@ -244,6 +258,7 @@ app.delete("/deluser/:id", (req, res) => {
   });
 });
 
+/*Usuarios planilla */
 app.post("/payempus", (req, res) => {
   const sql = "INSERT INTO payusr (`empid`) VALUES (?)";
   const values = [req.body.empid];
@@ -263,8 +278,8 @@ app.post("/payempus", (req, res) => {
   });
 });
 
-//Configuracion de gestiones
-//Lista de gestiones
+
+/*Lista de gestiones*/
 app.get("/gest", (req, res) => {
   const sql = "SELECT * FROM gest";
   dbConnection.query(sql, (err, result) => {
@@ -282,7 +297,7 @@ app.get("/gestdet", (req, res)=>{
 })
 
 
-//Crear gestion
+/*Crear gestion*/
 app.post("/creagest", (req, res) => {
   const sql = "INSERT INTO gest (`gest`,`descr`) VALUES (?)";
   const values = [req.body.gest, req.body.descr];
@@ -296,8 +311,9 @@ app.post("/creagest", (req, res) => {
     return res.json({ Status: "Success" });
   });
 });
-//Eliminar gestion
 
+
+/*Eliminar gestion*/
 app.delete("/delpayem/:id", (req, res) => {
   const id = req.params.id;
   const sql = "DELETE FROM payusr WHERE id = ?";
@@ -307,6 +323,7 @@ app.delete("/delpayem/:id", (req, res) => {
   });
 });
 
+/*eliminar gestiones*/
 app.delete("/delgest/:id", (req, res) => {
   const id = req.params.id;
   const sql = "DELETE FROM gest WHERE id = ?";
@@ -316,6 +333,7 @@ app.delete("/delgest/:id", (req, res) => {
   });
 });
 
+/*crear ufv*/
 app.post("/creaufv", (req, res) => {
   const sql = "INSERT INTO ufv (`montmay`,`montmen`, `gest`) VALUES (?)";
   const values = [req.body.montmay, req.body.montmen, req.body.gest];
@@ -330,6 +348,7 @@ app.post("/creaufv", (req, res) => {
   });
 });
 
+/*detalle ufv*/
 app.get("/ufvinfo", (req, res) => {
   const sql = "SELECT * FROM ufv";
   dbConnection.query(sql, (err, result) => {
@@ -338,6 +357,7 @@ app.get("/ufvinfo", (req, res) => {
   });
 });
 
+/*detalle ufv para que no se repita gestion*/
 app.get("/ufvdet",(req, res) =>{
   const sql = "SELECT `gest` FROM ufv"
   dbConnection.query(sql,(err ,result)=>{
@@ -346,6 +366,7 @@ app.get("/ufvdet",(req, res) =>{
   })
 })
 
+/*Eliminar UFV */
 app.delete("/delufv/:id", (req, res) => {
   const id = req.params.id;
   const sql = "DELETE FROM ufv WHERE id = ?";
@@ -355,6 +376,7 @@ app.delete("/delufv/:id", (req, res) => {
   });
 });
 
+/*Crear esquemas */
 app.get("/creasche", (req, res) => {
   const sql =
     "INSERT INTO setschem (`descripsche`,`detcount1`,`detcount2`,`detcount3`,`detcount4`,`detcount5`,`detcount6`,`detcount7`,`detcount8`) VALUES (?)";
@@ -379,6 +401,7 @@ app.get("/creasche", (req, res) => {
   });
 });
 
+/*Detalle de esquemas */
 app.get("/scheinfo", (req, res) => {
   const sql = "SELECT * FROM detschem";
   dbConnection.query(sql, (err, result) => {
@@ -387,6 +410,7 @@ app.get("/scheinfo", (req, res) => {
   });
 });
 
+/*Eliminar esquemas */
 app.delete("/delsche/:id", (req, res) => {
   const id = req.params.id;
   const sql = "DELETE FROM detschem WHERE id = ?";
@@ -396,6 +420,7 @@ app.delete("/delsche/:id", (req, res) => {
   });
 });
 
+/*Eliminar empleados*/
 app.get("/delete/:id", (req, res) => {
   const id = req.params.id;
   const sql = "DELETE FROM employee WHERE empid = ?";
@@ -405,6 +430,7 @@ app.get("/delete/:id", (req, res) => {
   });
 });
 
+/*Crear departamento*/
 app.post("/creadept", (req, res) => {
   const sql = "INSERT INTO depart (`details`) VALUES (?)";
   const values = [req.body.details];
@@ -419,6 +445,7 @@ app.post("/creadept", (req, res) => {
   });
 });
 
+/*Eliminar empleado */
 app.delete("/deldept/:id", (req, res) => {
   const id = req.params.id;
   const sql = "DELETE FROM depart WHERE id = ?";
@@ -428,6 +455,7 @@ app.delete("/deldept/:id", (req, res) => {
   });
 });
 
+/*Detalle de departamento */
 app.get("/depart", (req, res) => {
   const sql = "SELECT * FROM depart";
   dbConnection.query(sql, (err, result) => {
@@ -436,6 +464,7 @@ app.get("/depart", (req, res) => {
   });
 });
 
+/*Crear planilla */
 app.post("/creapay", (req, res) => {
   const sql = "INSERT INTO crepay (`gestion`,`datecalc`,`estate`) VALUES (?)";
   const values = [req.body.gestion, req.body.datecalc, req.body.estate];
@@ -449,6 +478,7 @@ app.post("/creapay", (req, res) => {
   });
 });
 
+/*Detalle de planilla */
 app.get("/detapay", (req, res) => {
   const sql = "SELECT * FROM crepay";
   dbConnection.query(sql, (err, result) => {
@@ -457,6 +487,7 @@ app.get("/detapay", (req, res) => {
   });
 });
 
+/*Detalle de gestion */
 app.get("/detapayg", (req, res) => {
   const sql = "SELECT `gestion` gest FROM crepay";
   dbConnection.query(sql, (err, result) => {
@@ -465,6 +496,7 @@ app.get("/detapayg", (req, res) => {
   });
 });
 
+/*Para no duplicar empleados */
 app.get("/detci", (req, res) => {
   const sql = "select `ci` from employee";
   dbConnection.query(sql, (err, result) => {
@@ -473,6 +505,7 @@ app.get("/detci", (req, res) => {
   });
 });
 
+/*Eliminar planilla */
 app.get("/delepay/:id", (req, res) => {
   const id = req.params.id;
   const sql = "DELETE FROM crepay WHERE id = ?";
@@ -482,6 +515,7 @@ app.get("/delepay/:id", (req, res) => {
   });
 });
 
+/*Detalle de sucursales*/
 app.get("/branch", (req, res) => {
   const sql = "SELECT * FROM branch";
   dbConnection.query(sql, (err, result) => {
@@ -490,6 +524,7 @@ app.get("/branch", (req, res) => {
   });
 });
 
+/*Crear sucursales nuevas*/
 app.post("/creabranch", (req, res) => {
   const sql = "INSERT INTO branch (`details`) VALUES (?)";
   const values = [req.body.details];
@@ -504,6 +539,7 @@ app.post("/creabranch", (req, res) => {
   });
 });
 
+/*Eliminar sucursales */
 app.delete("/delbranc/:id", (req, res) => {
   const id = req.params.id;
   const sql = "DELETE FROM branch WHERE id = ?";
@@ -513,6 +549,7 @@ app.delete("/delbranc/:id", (req, res) => {
   });
 });
 
+/*Eliminar de empleados */
 app.delete("/deldtma/:gest", (req, res) => {
   const gest = req.params.gest;
   const sql = "DELETE FROM dmanual where gest = ?";
@@ -522,6 +559,7 @@ app.delete("/deldtma/:gest", (req, res) => {
   });
 });
 
+/*Acceso de administrador*/
 app.post("/login", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -561,8 +599,9 @@ app.post("/login", (req, res) => {
   });
 });
 
-///---
 
+
+/*Accesos de empleados*/
 app.post("/employeelogin", (req, res) => {
   const sql = "SELECT * FROM employee WHERE email = ?";
 
@@ -594,6 +633,7 @@ app.post("/employeelogin", (req, res) => {
   });
 });
 
+/*Crear empleado*/
 app.post("/create", multerUpload.single("image"), (req, res) => {
   const sql =
     "INSERT INTO employee (`firstname`,`middlename`,`lastname`,`lastname2`,`ci`,`ext`,`birthdate`,`sex`,`martstatus`,`mobile`,`addresshome`,`addresswork`,`dept`,`branch`,`startdate`,`termdate`,`reasonterm`,`salary`,`nchildren`,`birthcountry`,`nua`,`afp`,`tipjub`,`position`,`profession`,`bank`,`codbank`,`password`,`email`,`role`,`estado`,`linkedin`,`image`) VALUES (?)";
@@ -644,7 +684,7 @@ app.post("/create", multerUpload.single("image"), (req, res) => {
   });
 });
 
-/*fileUpload debe estar al final para no tener conflicto */
+/*fileUpload para cargar a excel debe estar al final para no tener conflicto */
 app.use(fileUpload());
 
 app.post("/upload-excel", (req, res) => {
@@ -675,11 +715,13 @@ app.post("/upload-excel", (req, res) => {
   });
 });
 
+/*Cerrar sesion*/
 app.get("/logout", (req, res) => {
   res.clearCookie("token");
   return res.json({ status: "Success" });
 });
 
+/*Procedimiento para el Calculo de planilla */
 app.get("/calpla/:id", (req, res) => {
   const id = req.params.id;
   dbConnection.query("CALL calPLa(?)", [id], (error, results) => {
@@ -693,6 +735,7 @@ app.get("/calpla/:id", (req, res) => {
   });
 });
 
+/*Procedimiento para eliminar calculos de planilla */
 app.get("/delpla/:id", (req, res) => {
   const id = req.params.id;
   dbConnection.query("CALL delPla(?)", [id], (error, result) => {
@@ -701,6 +744,7 @@ app.get("/delpla/:id", (req, res) => {
   });
 });
 
+/*Reporte de calculo de planilla*/
 app.get("/rplacalc/:id", (req, res) => {
   const id = req.params.id;
   dbConnection.query("CALL reportPG(?)", [id], (err, result) => {
@@ -709,6 +753,7 @@ app.get("/rplacalc/:id", (req, res) => {
   });
 });
 
+/*Reporte de aporte de planilla */
 app.get("/rppro/:id", (req, res) => {
   const id = req.params.id;
   dbConnection.query("CALL reportAPO(?)", [id], (err, result) => {
@@ -717,6 +762,7 @@ app.get("/rppro/:id", (req, res) => {
   });
 });
 
+/*Liquido pagable total del mes actual*/
 app.get("/rpliq", (req, res) => {
   dbConnection.query("CALL reportLIQ()", (err, result) => {
     /*console.log(result);*/
@@ -724,6 +770,7 @@ app.get("/rpliq", (req, res) => {
   });
 });
 
+/*Total ganado del mes actual */
 app.get("/rptgan", (req, res) => {
   dbConnection.query("CALL reportTGA()", (err, result) => {
     /*console.log(result);*/
@@ -731,6 +778,7 @@ app.get("/rptgan", (req, res) => {
   });
 });
 
+/*Costo de empleados */
 app.get("/rptcosem", (req, res) => {
   dbConnection.query("CALL repcosem('')", (err, result) => {
     /*console.log(result);*/
@@ -738,6 +786,7 @@ app.get("/rptcosem", (req, res) => {
   });
 });
 
+/*Costo laboral */
 app.get("/rptcolab", (req, res) => {
   dbConnection.query("CALL repcolab('')", (err, result) => {
     /*console.log(result);*/
@@ -745,6 +794,7 @@ app.get("/rptcolab", (req, res) => {
   });
 });
 
+/*Costo beneficio empleado*/
 app.get("/rptcoben", (req, res) => {
   dbConnection.query("CALL repcoben('')", (err, result) => {
     /*console.log(result);*/
@@ -752,6 +802,7 @@ app.get("/rptcoben", (req, res) => {
   });
 });
 
+/*Reporte tasa de retenciones de empleado */
 app.get("/rptcotre", (req, res) => {
   dbConnection.query("CALL repcotre('')", (err, result) => {
     /*console.log(result);*/
@@ -759,6 +810,7 @@ app.get("/rptcotre", (req, res) => {
   });
 });
 
+/*Empleados del mes */
 app.get("/rpbirth/:id", (req, res) => {
   const id = req.params.id;
   dbConnection.query("CALL birth(?)", [id], (err, result) => {
@@ -767,6 +819,7 @@ app.get("/rpbirth/:id", (req, res) => {
   });
 });
 
+/*Cantidad de hombres */
 app.get("/rpsex", (req, res) => {
   const id = req.params.id;
   dbConnection.query("CALL sexemp()", (err, result) => {
@@ -775,6 +828,7 @@ app.get("/rpsex", (req, res) => {
   });
 });
 
+/*Cantidad de mujeres */
 app.get("/rpsexm", (req, res) => {
   dbConnection.query("CALL sexempm()", (err, result) => {
     /*console.log(result);*/
@@ -782,6 +836,7 @@ app.get("/rpsexm", (req, res) => {
   });
 });
 
+/*Nuevos empleados del mes */
 app.get("/rpnewemp", (req, res) => {
   dbConnection.query("CALL newempmes()", (err, result) => {
     /*console.log(result);*/
@@ -789,12 +844,14 @@ app.get("/rpnewemp", (req, res) => {
   });
 });
 
+/*Vacaciones de empleados */
 app.get("/rpvac", (req, res) => {
   dbConnection.query("CALL vacemp()", (err, result) => {
     res.json({ Status: "Success", Result: result[0] });
   });
 });
 
+/*Grafico de empleados por departamento */
 app.get("/rpempfdep", (req, res) => {
   const sql =
     "select dept as departamento, count(*) as empleados from employee group by dept";
@@ -803,6 +860,7 @@ app.get("/rpempfdep", (req, res) => {
   });
 });
 
+/*Crear vacacaiones */
 app.post("/creavac", (req, res) => {
   const sql = "INSERT INTO vacSol (`empid`,`dsol`,`cday`,`estate`) VALUES (?)";
   const values = [
@@ -821,12 +879,14 @@ app.post("/creavac", (req, res) => {
   });
 });
 
+/*Detalle de vacaciones*/
 app.get("/detvacp", (req, res) => {
   dbConnection.query("CALL dvacp()", (err, result) => {
     res.json({ Status: "Success", Result: result[0] });
   });
 });
 
+/*Autorizaciones de vacaiones solicitadas*/
 app.get("/upvac/:id", (req, res) => {
   const id = req.params.id;
   const sql = "UPDATE `RRHH`.`vacSol` SET `estate` = 'A' WHERE `id` = ?";
@@ -839,6 +899,7 @@ app.get("/upvac/:id", (req, res) => {
   });
 });
 
+/*rechazo de vacaciones solicitadas*/
 app.get("/upvacd/:id", (req, res) => {
   const id = req.params.id;
   const sql = "UPDATE `RRHH`.`vacSol` SET `estate` = 'R' WHERE `id` = ?";
@@ -851,6 +912,7 @@ app.get("/upvacd/:id", (req, res) => {
   });
 });
 
+/*Detalle de vacaciones solicitados */
 app.get("/nrosolp", (req, res) => {
   const sql =
     "SELECT IFNULL(count(estate),0) nsol FROM RRHH.vacSol WHERE estate='S'";
@@ -859,6 +921,7 @@ app.get("/nrosolp", (req, res) => {
   });
 });
 
+/*Detalle vacaciones empleados*/
 app.get("/vacempp/:id", (req, res) => {
   const id = req.params.id;
   const sql = "CALL vacempp(?)";
@@ -867,6 +930,7 @@ app.get("/vacempp/:id", (req, res) => {
   });
 });
 
+/*vacaciones empleado por codigo */
 app.get("/vacempd/:id", (req, res) => {
   const id = req.params.id;
   const sql = "CALL vacempdt(?)";
@@ -875,6 +939,7 @@ app.get("/vacempd/:id", (req, res) => {
   });
 });
 
+/*Reporte de planilla ministerio */
 app.get("/repmin/:id", (req, res) => {
   const id = req.params.id;
   const sql = "CALL reportpgmin(?)";
@@ -997,6 +1062,8 @@ app.get("/repmin/:id", (req, res) => {
   });
 });
 
+
+/*Reporte de boleta de pagos */
 app.get("/repbolt/:gest/:id", (req, res) => {
   const { gest, id } = req.params;
   const sql = "CALL reportpgminb(?,?)";
@@ -1244,6 +1311,7 @@ app.get("/repbolt/:gest/:id", (req, res) => {
   });
 });
 
+/*reporte boleta laboral*/
 app.get("/replab/:id", (req, res) => {
   const id = req.params.id;
   const sql = "CALL reportpmlab(?)";
@@ -1354,6 +1422,7 @@ app.get("/replab/:id", (req, res) => {
   });
 });
 
+/*reporte de patronal*/
 app.get("/reppat/:id", (req, res) => {
   const id = req.params.id;
   const sql = "CALL reportpmpat(?)";
@@ -1462,6 +1531,7 @@ app.get("/reppat/:id", (req, res) => {
   });
 });
 
+/*Reporte de provisiones  */
 app.get("/repprov/:id", (req, res) => {
   const id = req.params.id;
   const sql = "CALL reportpmpro(?)";
@@ -1560,6 +1630,7 @@ app.get("/repprov/:id", (req, res) => {
   });
 });
 
+/*Reporte de planilla tributaria */
 app.get("/reptrib/:id", (req, res) => {
   const id = req.params.id;
   const sql = "CALL reportpmtri(?)";
@@ -1680,6 +1751,8 @@ app.get("/reptrib/:id", (req, res) => {
   });
 });
 
+
+/*Reporte laboral */
 app.get("/replab/:id", (req, res) => {
   const id = req.params.id;
   const sql = "CALL reportpmlab(?)";
@@ -1688,6 +1761,7 @@ app.get("/replab/:id", (req, res) => {
   });
 });
 
+/*Reporte patronal */
 app.get("/reppat/:id", (req, res) => {
   const id = req.params.id;
   const sql = "CALL reportpmpat(?)";
@@ -1696,6 +1770,7 @@ app.get("/reppat/:id", (req, res) => {
   });
 });
 
+/*Reporte provisiones*/
 app.get("/reppro/:id", (req, res) => {
   const id = req.params.id;
   const sql = "CALL reportpmpro(?)";
@@ -1704,6 +1779,7 @@ app.get("/reppro/:id", (req, res) => {
   });
 });
 
+/*Reporte tributaria */
 app.get("/reptri/:id", (req, res) => {
   const id = req.params.id;
   const sql = "CALL reportpmtri(?)";
@@ -1712,6 +1788,7 @@ app.get("/reptri/:id", (req, res) => {
   });
 });
 
+/*Reporte de esquemas */
 app.get("/repschem/:id", (req, res) => {
   const id = req.params.id;
   const sql = "CALL reportSCHE(?)";
@@ -1720,6 +1797,7 @@ app.get("/repschem/:id", (req, res) => {
   });
 });
 
+/*No duplicar gestion */
 app.get("/detgest", (req, res) => {
   const sql = "SELECT gest FROM RRHH.tproce";
   dbConnection.query(sql, (err, result) => {
@@ -1727,6 +1805,7 @@ app.get("/detgest", (req, res) => {
   });
 });
 
+/*Reporte de vacaciones */
 app.get("/detvact", (req, res) => {
   const id = req.params.id;
   const sql = "CALL dvacemt()";
@@ -1757,7 +1836,7 @@ app.get("/detvact", (req, res) => {
         const content = `
         
           <div style="${divStyle}">
-            <h1>Detalle general de vacaciones </h1>
+            <h1>Vacaciones Generales</h1>
           </div>
         
           <table style="${tableStyle}">
@@ -1804,6 +1883,7 @@ app.get("/detvact", (req, res) => {
   });
 });
 
+/*Historico de empleados */
 app.get("/hisempl", (req, res) => {
   const sql = "CALL emphis()";
   dbConnection.query(sql, (err, result) => {
@@ -1811,6 +1891,7 @@ app.get("/hisempl", (req, res) => {
   });
 });
 
+/*Puerto de conexion */
 const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, console.log(`Running port: ${PORT} `));
