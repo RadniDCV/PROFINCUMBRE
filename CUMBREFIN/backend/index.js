@@ -114,9 +114,12 @@ app.put("/update/:id", (req, res) => {
     bank,
     codbank,
     estado,
+    scheacco,
+    linkedin,
+    useredit,
   } = req.body;
   const sql =
-    "UPDATE employee set `martstatus` = ? ,`mobile` = ? , `addresshome` = ?, `addresswork` = ?, `dept` = ?, `branch`= ?,`termdate` = ?,`reasonterm` = ?,`salary` = ?,`nchildren` = ?,`birthcountry` = ?,`nua` = ?,`position` = ?,`profession` = ?,`bank` = ?,`codbank` = ?,`estado` = ?  WHERE empid = ?";
+    "UPDATE employee set `martstatus` = ? ,`mobile` = ? , `addresshome` = ?, `addresswork` = ?, `dept` = ?, `branch`= ?,`termdate` = ?,`reasonterm` = ?,`salary` = ?,`nchildren` = ?,`birthcountry` = ?,`nua` = ?,`position` = ?,`profession` = ?,`bank` = ?,`codbank` = ?,`estado` = ?,`scheacco` = ?, `linkedin`= ?, `useredit`= ?  WHERE empid = ?";
   const values = [
     martstatus,
     mobile,
@@ -135,6 +138,9 @@ app.put("/update/:id", (req, res) => {
     bank,
     codbank,
     estado,
+    scheacco,
+    linkedin,
+    useredit,
     id,
   ];
   dbConnection.query(sql, values, (err, result) => {
@@ -266,6 +272,16 @@ app.get("/gest", (req, res) => {
     return res.json({ Status: "Success", Result: result });
   });
 });
+
+app.get("/gestdet", (req, res)=>{
+  const sql = "SELECT `gest` from gest"
+  dbConnection.query(sql,(err,result)=>{
+    if (err) return res.json({ Error: "Error al obtener gestion sql" });
+    return res.json({ Status: "Success", Result: result });
+  })
+})
+
+
 //Crear gestion
 app.post("/creagest", (req, res) => {
   const sql = "INSERT INTO gest (`gest`,`descr`) VALUES (?)";
@@ -317,10 +333,18 @@ app.post("/creaufv", (req, res) => {
 app.get("/ufvinfo", (req, res) => {
   const sql = "SELECT * FROM ufv";
   dbConnection.query(sql, (err, result) => {
-    if (err) return res.json({ Error: "Error al obtener gestion sql" });
+    if (err) return res.json({ Error: "Error al obtener ufv sql" });
     return res.json({ Status: "Success", Result: result });
   });
 });
+
+app.get("/ufvdet",(req, res) =>{
+  const sql = "SELECT `gest` FROM ufv"
+  dbConnection.query(sql,(err ,result)=>{
+    if(err) return res.json({Error: "Error al obtener ufv"})
+    return res.json({Status: "Success", Result: result})
+  })
+})
 
 app.delete("/delufv/:id", (req, res) => {
   const id = req.params.id;
@@ -331,7 +355,48 @@ app.delete("/delufv/:id", (req, res) => {
   });
 });
 
-app.delete("/delete/:id", (req, res) => {
+app.get("/creasche", (req, res) => {
+  const sql =
+    "INSERT INTO setschem (`descripsche`,`detcount1`,`detcount2`,`detcount3`,`detcount4`,`detcount5`,`detcount6`,`detcount7`,`detcount8`) VALUES (?)";
+  const values = [
+    req.body.descripsche,
+    req.body.detcount1,
+    req.body.detcount2,
+    req.body.detcount3,
+    req.body.detcount4,
+    req.body.detcount5,
+    req.body.detcount6,
+    req.body.detcount7,
+    req.body.detcount8,
+  ];
+  dbConnection.query(sql, [values], (err, result) => {
+    if (err)
+      return res.json({
+        Error: "Inside singup query",
+        ErrorMessage: err.message,
+      });
+    return res.json({ Status: "Success" });
+  });
+});
+
+app.get("/scheinfo", (req, res) => {
+  const sql = "SELECT * FROM detschem";
+  dbConnection.query(sql, (err, result) => {
+    if (err) return res.json({ Error: "Error al obtener gestion sql" });
+    return res.json({ Status: "Success", Result: result });
+  });
+});
+
+app.delete("/delsche/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "DELETE FROM detschem WHERE id = ?";
+  dbConnection.query(sql, [id], (err, result) => {
+    if (err) return res.json({ Error: "delete gestion error in sql" });
+    return res.json({ Status: "Success" });
+  });
+});
+
+app.get("/delete/:id", (req, res) => {
   const id = req.params.id;
   const sql = "DELETE FROM employee WHERE empid = ?";
   dbConnection.query(sql, [id], (err, result) => {
@@ -392,7 +457,23 @@ app.get("/detapay", (req, res) => {
   });
 });
 
-app.delete("/delepay/:id", (req, res) => {
+app.get("/detapayg", (req, res) => {
+  const sql = "SELECT `gestion` gest FROM crepay";
+  dbConnection.query(sql, (err, result) => {
+    if (err) return res, json({ Error: "Error in runnig query" });
+    return res.json({ Status: "Success", Result: result });
+  });
+});
+
+app.get("/detci", (req, res) => {
+  const sql = "select `ci` from employee";
+  dbConnection.query(sql, (err, result) => {
+    if (err) return res, json({ Error: "Error in runnig query" });
+    return res.json({ Status: "Success", Result: result });
+  });
+});
+
+app.get("/delepay/:id", (req, res) => {
   const id = req.params.id;
   const sql = "DELETE FROM crepay WHERE id = ?";
   dbConnection.query(sql, [id], (err, result) => {
@@ -466,7 +547,7 @@ app.post("/login", (req, res) => {
           expiresIn: "2h",
         });
         res.cookie("token", token);
-        return res.json({ Status: "Success" });
+        return res.json({ Status: "Success", result: result[0].username });
       } else {
         return res.json({ Status: "Error", Error: "Wrong Email or password" });
       }
@@ -486,7 +567,6 @@ app.post("/employeelogin", (req, res) => {
   const sql = "SELECT * FROM employee WHERE email = ?";
 
   dbConnection.query(sql, [req.body.email], (err, result) => {
-   
     if (err)
       return res.json({ Status: "Error", Error: "Error in runnig query" });
     if (result.length > 0) {
@@ -496,13 +576,9 @@ app.post("/employeelogin", (req, res) => {
         (err, response) => {
           if (err) return res.json({ Error: "password error" });
           if (response) {
-            const token = jwt.sign(
-              { role: "02"},
-              "jwt-secret-key",
-              {
-                expiresIn: "2h",
-              }
-            );
+            const token = jwt.sign({ role: "02" }, "jwt-secret-key", {
+              expiresIn: "2h",
+            });
             res.cookie("token", token, { httpOnly: true, secure: true });
 
             return res.json({ Status: "Success", id: result[0].empid });
@@ -520,7 +596,7 @@ app.post("/employeelogin", (req, res) => {
 
 app.post("/create", multerUpload.single("image"), (req, res) => {
   const sql =
-    "INSERT INTO employee (`firstname`,`middlename`,`lastname`,`lastname2`,`ci`,`ext`,`birthdate`,`sex`,`martstatus`,`mobile`,`addresshome`,`addresswork`,`dept`,`branch`,`startdate`,`termdate`,`reasonterm`,`salary`,`nchildren`,`birthcountry`,`nua`,`afp`,`tipjub`,`position`,`profession`,`bank`,`codbank`,`password`,`email`,`role`,`estado`,`image`) VALUES (?)";
+    "INSERT INTO employee (`firstname`,`middlename`,`lastname`,`lastname2`,`ci`,`ext`,`birthdate`,`sex`,`martstatus`,`mobile`,`addresshome`,`addresswork`,`dept`,`branch`,`startdate`,`termdate`,`reasonterm`,`salary`,`nchildren`,`birthcountry`,`nua`,`afp`,`tipjub`,`position`,`profession`,`bank`,`codbank`,`password`,`email`,`role`,`estado`,`linkedin`,`image`) VALUES (?)";
   bcrypt.hash(req.body.password.toString(), 10, (err, hash) => {
     if (err) return res.json({ Error: "Error en hashing password" });
     const { filename } = req.file;
@@ -558,6 +634,7 @@ app.post("/create", multerUpload.single("image"), (req, res) => {
       req.body.email,
       req.body.role,
       req.body.estado,
+      req.body.linkedin,
       imagePath,
     ];
     dbConnection.query(sql, [values], (err, result) => {
@@ -654,6 +731,33 @@ app.get("/rptgan", (req, res) => {
   });
 });
 
+app.get("/rptcosem", (req, res) => {
+  dbConnection.query("CALL repcosem('')", (err, result) => {
+    /*console.log(result);*/
+    res.json({ Status: "Success", Result: result[0] });
+  });
+});
+
+app.get("/rptcolab", (req, res) => {
+  dbConnection.query("CALL repcolab('')", (err, result) => {
+    /*console.log(result);*/
+    res.json({ Status: "Success", Result: result[0] });
+  });
+});
+
+app.get("/rptcoben", (req, res) => {
+  dbConnection.query("CALL repcoben('')", (err, result) => {
+    /*console.log(result);*/
+    res.json({ Status: "Success", Result: result[0] });
+  });
+});
+
+app.get("/rptcotre", (req, res) => {
+  dbConnection.query("CALL repcotre('')", (err, result) => {
+    /*console.log(result);*/
+    res.json({ Status: "Success", Result: result[0] });
+  });
+});
 
 app.get("/rpbirth/:id", (req, res) => {
   const id = req.params.id;
@@ -904,7 +1008,6 @@ app.get("/repbolt/:gest/:id", (req, res) => {
         const broser = await puppeteer.launch();
         const page = await broser.newPage();
 
-        
         const cellStyle = `
           border: 1px solid #ddd;
           padding: 4px;
@@ -928,10 +1031,10 @@ app.get("/repbolt/:gest/:id", (req, res) => {
         const border = `
           margin-left: 30px;
           margin-right: 30px;
-        `
+        `;
 
         const gest = result[0][0].gest;
-        console.log( gest,id );
+        console.log(gest, id);
 
         const content = `
         
@@ -943,16 +1046,16 @@ app.get("/repbolt/:gest/:id", (req, res) => {
           ${result[0]
             .map(
               (item) => `
-          <div style="${divStylen, border}">
+          <div style="${(divStylen, border)}">
             <div>Codigo: ${item.cod_emp}</div>
           </div>
-          <div style="${divStylen, border}">
+          <div style="${(divStylen, border)}">
             <div>Nombre completo: ${item.nomc}</div>
           </div>
-          <div style="${divStylen, border}">
+          <div style="${(divStylen, border)}">
             <div>Cargo: ${item.position}</div> 
           </div> 
-          <div style="${divStylen, border}">
+          <div style="${(divStylen, border)}">
             <div>Fecha de ingreso: ${item.startd}</div> 
           </div> 
           <hr style="${border}">
@@ -1609,8 +1712,100 @@ app.get("/reptri/:id", (req, res) => {
   });
 });
 
+app.get("/repschem/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "CALL reportSCHE(?)";
+  dbConnection.query(sql, [id], (err, result) => {
+    res.json({ Status: "Success", Result: result[0] });
+  });
+});
+
 app.get("/detgest", (req, res) => {
   const sql = "SELECT gest FROM RRHH.tproce";
+  dbConnection.query(sql, (err, result) => {
+    res.json({ Status: "Success", Result: result });
+  });
+});
+
+app.get("/detvact", (req, res) => {
+  const id = req.params.id;
+  const sql = "CALL dvacemt()";
+  dbConnection.query(sql, (err, result) => {
+    if (err) {
+      res.status(500).json({ Status: "Error", Error: err });
+    } else {
+      (async () => {
+        const broser = await puppeteer.launch();
+        const page = await broser.newPage();
+
+        const tableStyle = `
+          width: 100%;
+          margin: 0;
+          font-size: 0.5rem;
+          font-family: 'Roboto', sans-serif;
+        `;
+        const cellStyle = `
+          border: 1px solid #ddd;
+          padding: 4px;
+          width: 30%;
+        `;
+        const divStyle = `
+          text-align: center;
+          padding: 10px;
+        `;
+
+        const content = `
+        
+          <div style="${divStyle}">
+            <h1>Detalle general de vacaciones </h1>
+          </div>
+        
+          <table style="${tableStyle}">
+          <tr>
+              <th style="${cellStyle}">Código Empleado</th> 
+              <th style="${cellStyle}">Nombre Completo</th>
+              <th style="${cellStyle}">Fecha de ingreso</th> 
+              <th style="${cellStyle}">Años de antiguedad</th> 
+              <th style="${cellStyle}">Dias de vacacion</th>
+              <th style="${cellStyle}">Dias solicitados</th>
+              <th style="${cellStyle}">Total de dias restantes</th>
+          </tr>
+          ${result[0]
+            .map(
+              (item) => `
+          <tr>
+                <td style="${cellStyle}">${item.empid}</td>
+                <td style="${cellStyle}">${item.lastname} ${item.lastname2} ${item.firstname} ${item.middlename}</td> 
+                <td style="${cellStyle}">${item.startDatee}</td>
+                <td style="${cellStyle}">${item.anio}</td>
+                <td style="${cellStyle}">${item.anios}</td>
+                <td style="${cellStyle}">${item.diasS}</td>
+                <td style="${cellStyle}">${item.tdias}</td>
+           </tr>
+              `
+            )
+            .join("")}
+              
+          </table>
+        `;
+        await page.setContent(content);
+        const pdfBuffer = await page.pdf({ format: "legal", landscape: false });
+        await broser.close();
+
+        // Enviar el PDF como respuesta
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader(
+          "Content-Disposition",
+          `attachment; filename=reporte.pdf`
+        );
+        res.status(200).send(pdfBuffer);
+      })();
+    }
+  });
+});
+
+app.get("/hisempl", (req, res) => {
+  const sql = "CALL emphis()";
   dbConnection.query(sql, (err, result) => {
     res.json({ Status: "Success", Result: result });
   });
