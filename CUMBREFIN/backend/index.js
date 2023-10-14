@@ -10,8 +10,20 @@ const xlsx = require("xlsx");
 const fileUpload = require("express-fileupload");
 const { error } = require("console");
 const { default: puppeteer } = require("puppeteer");
+const validator = require("validator")
+const util = require("util")
+
+/*const https = require("https");
+const fs = require("fs");*/
 
 const app = express();
+
+/*
+const privateKey = fs.readFileSync('./certificados/key.pem', 'utf8');
+const certificate = fs.readFileSync('./certificados/cert.pem', 'utf8');
+const credentials = {key: privateKey, cert:certificate}
+const httpsServer = https.createServer(credentials, app)
+*/
 
 app.use(
   cors({
@@ -97,6 +109,26 @@ app.get("/get/:id", (req, res) => {
     if (err) return res.json({ Error: "Get employee error in sql" });
     return res.json({ Status: "Success", Result: result });
   });
+});
+
+app.put("/updatepass/:id", async(req, res) => {
+  const id = req.params.id;
+  const { password } = req.body;
+  try{
+    const hashedPassword = await bcrypt.hash(password, 10)
+    const sql = "UPDATE `RRHH`.`employee` SET `password` = ? WHERE `empid` = ?";
+    const values = [hashedPassword, id];
+    dbConnection.query(sql, values, (err, result) => {
+    if (err) {
+      console.error("Error al actualizar empleado", err);
+      return res.status(500).json({ Error: "Error al actualizar empleado" });
+    }
+    return res.json({ Status: "Success" });
+  });
+  }catch (error) {
+    console.log('Error al cifrar la contraseña', error);
+    return res.status(500).json({Error: "Error al cifrar la contraseña"})
+  }
 });
 
 /*Actualizacion de empleados */
@@ -216,7 +248,7 @@ app.get("/employeemas", (req, res) => {
 /*Empleados detallado */
 app.get("/getemployee", (req, res) => {
   const sql =
-    "SELECT *, DAY(startdate)AS DIA, MONTH(startdate) AS MES, YEAR(startdate) as ANIO, CASE WHEN ext='01' then 'LP' WHEN ext='02' then 'SC' WHEN ext='03' then 'CB' WHEN ext='04' then 'CH' WHEN ext='05' then 'PO' WHEN ext='06' then 'OR' WHEN ext='07' then 'TJ' WHEN ext='08' then 'BE' WHEN ext='09' then 'PA' else 'Extranjero' end extci, case when sex='01'then 'Hombre' else 'Mujer' end sexo, case when martstatus='01' then 'Casado(a)' when martstatus='02' then 'Soltero(a)' when martstatus='03' then 'Viudo(a)' when martstatus='04' then 'Vidorsiado(a)' else '' end marstatuse, case when bank='01' then 'Mercantil Santa Cruz' when bank='02' then 'UNION' when bank='03' then 'BISA' when bank='04' then 'BCP' when bank='05' then 'Prodem' else '' end banks FROM employee order by startdate";
+    "SELECT *,DATE_FORMAT(birthdate,'%Y-%m-%d') birthdate ,DATE_FORMAT(startdate,'%Y-%m-%d') startdate  ,DAY(startdate)AS DIA, MONTH(startdate) AS MES, YEAR(startdate) as ANIO, CASE WHEN ext='01' then 'LP' WHEN ext='02' then 'SC' WHEN ext='03' then 'CB' WHEN ext='04' then 'CH' WHEN ext='05' then 'PO' WHEN ext='06' then 'OR' WHEN ext='07' then 'TJ' WHEN ext='08' then 'BE' WHEN ext='09' then 'PA' else 'Extranjero' end extci, case when sex='01'then 'Hombre' else 'Mujer' end sexo, case when martstatus='01' then 'Casado(a)' when martstatus='02' then 'Soltero(a)' when martstatus='03' then 'Viudo(a)' when martstatus='04' then 'Vidorsiado(a)' else '' end marstatuse, case when bank='01' then 'Mercantil Santa Cruz' when bank='02' then 'UNION' when bank='03' then 'BISA' when bank='04' then 'BCP' when bank='05' then 'Prodem' else '' end banks FROM employee order by lastname";
   dbConnection.query(sql, (err, result) => {
     if (err) return res.json({ Error: "Error al obtener empleado sql" });
     return res.json({ Status: "Success", Result: result });
@@ -278,7 +310,6 @@ app.post("/payempus", (req, res) => {
   });
 });
 
-
 /*Lista de gestiones*/
 app.get("/gest", (req, res) => {
   const sql = "SELECT * FROM gest";
@@ -288,14 +319,13 @@ app.get("/gest", (req, res) => {
   });
 });
 
-app.get("/gestdet", (req, res)=>{
-  const sql = "SELECT `gest` from gest"
-  dbConnection.query(sql,(err,result)=>{
+app.get("/gestdet", (req, res) => {
+  const sql = "SELECT `gest` from gest";
+  dbConnection.query(sql, (err, result) => {
     if (err) return res.json({ Error: "Error al obtener gestion sql" });
     return res.json({ Status: "Success", Result: result });
-  })
-})
-
+  });
+});
 
 /*Crear gestion*/
 app.post("/creagest", (req, res) => {
@@ -311,7 +341,6 @@ app.post("/creagest", (req, res) => {
     return res.json({ Status: "Success" });
   });
 });
-
 
 /*Eliminar gestion*/
 app.delete("/delpayem/:id", (req, res) => {
@@ -358,13 +387,13 @@ app.get("/ufvinfo", (req, res) => {
 });
 
 /*detalle ufv para que no se repita gestion*/
-app.get("/ufvdet",(req, res) =>{
-  const sql = "SELECT `gest` FROM ufv"
-  dbConnection.query(sql,(err ,result)=>{
-    if(err) return res.json({Error: "Error al obtener ufv"})
-    return res.json({Status: "Success", Result: result})
-  })
-})
+app.get("/ufvdet", (req, res) => {
+  const sql = "SELECT `gest` FROM ufv";
+  dbConnection.query(sql, (err, result) => {
+    if (err) return res.json({ Error: "Error al obtener ufv" });
+    return res.json({ Status: "Success", Result: result });
+  });
+});
 
 /*Eliminar UFV */
 app.delete("/delufv/:id", (req, res) => {
@@ -559,6 +588,10 @@ app.delete("/deldtma/:gest", (req, res) => {
   });
 });
 
+function isValidEmail(email) {
+  return validator.isEmail(email);
+}
+
 /*Acceso de administrador*/
 app.post("/login", (req, res) => {
   const email = req.body.email;
@@ -599,10 +632,42 @@ app.post("/login", (req, res) => {
   });
 });
 
-
-
 /*Accesos de empleados*/
-app.post("/employeelogin", (req, res) => {
+
+const queryAsync = util.promisify(dbConnection.query).bind(dbConnection)
+
+app.post('/employeelogin', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!isValidEmail(email)) {
+    return res.json({ Status: 'Error', Error: 'Correo electrónico inválido' });
+  }
+
+  try {
+    const [rows] = await queryAsync('SELECT empid, email, password, role FROM employee WHERE email = ?', [email]);
+    /*console.log(rows.password, password)*/
+    if (rows.length === 0) {
+      return res.json({ Status: 'Error', Error: 'Correo electrónico o contraseña incorrectos' });
+      
+    }
+
+    const match = await bcrypt.compare(password, rows.password);
+    
+    if (match) {
+      const token = jwt.sign({ role: '02' }, 'jwt-secret-key', { expiresIn: '2h' });
+      res.cookie('token', token); /*, { httpOnly: true, secure: true }*/
+      return res.json({ Status: 'Success', id: rows.empid });
+    } else {
+      return res.json({ Status: 'Error', Error: 'Correo electrónico o contraseña incorrectos' });
+    }
+  } catch (error) {
+    console.error('Error al autenticar empleado:', error.message);
+    
+    return res.json({ Status: 'Error', Error: 'Error al autenticar empleado' });
+  }
+});
+
+/*app.post("/employeelogin", (req, res) => {
   const sql = "SELECT * FROM employee WHERE email = ?";
 
   dbConnection.query(sql, [req.body.email], (err, result) => {
@@ -632,7 +697,7 @@ app.post("/employeelogin", (req, res) => {
     }
   });
 });
-
+*/
 /*Crear empleado*/
 app.post("/create", multerUpload.single("image"), (req, res) => {
   const sql =
@@ -1061,7 +1126,6 @@ app.get("/repmin/:id", (req, res) => {
     }
   });
 });
-
 
 /*Reporte de boleta de pagos */
 app.get("/repbolt/:gest/:id", (req, res) => {
@@ -1751,7 +1815,6 @@ app.get("/reptrib/:id", (req, res) => {
   });
 });
 
-
 /*Reporte laboral */
 app.get("/replab/:id", (req, res) => {
   const id = req.params.id;
@@ -1891,7 +1954,34 @@ app.get("/hisempl", (req, res) => {
   });
 });
 
+app.get("/reporbank/:id", (req, res) => {
+  const id = req.params.id;
+  const sql = "CALL reportbank(?)";
+  dbConnection.query(sql, [id], (err, result) => {
+    if (err) {
+      // Manejar errores si es necesario
+      res.status(500).json({ error: "Error al obtener datos" });
+      return;
+    }
+
+    if (result && result[0] && result[0].length > 0) {
+      // Obtener el array Result y enviarlo como respuesta
+      const data = result[0];
+      res.json(data);
+    } else {
+      // Si no hay datos, enviar una respuesta vacía o un mensaje adecuado
+      res.status(404).json({ error: "No se encontraron datos" });
+    }
+  });
+});
+
 /*Puerto de conexion */
 const PORT = process.env.PORT || 4000;
+
+/*
+httpsServer.listen(PORT, () =>{
+  console.log(`Running on HTTPS por: ${PORT}`)
+})
+*/
 
 app.listen(PORT, console.log(`Running port: ${PORT} `));
